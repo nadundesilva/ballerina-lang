@@ -122,13 +122,13 @@ class JvmObservabilityGen {
             BIRFunction func = pkg.functions.get(i);
             rewriteAsyncInvocations(func, pkg);
             rewriteObservableFunctionInvocations(func, pkg);
-            if (ENTRY_POINT_MAIN_METHOD_NAME.equals(func.name.value)) {
-                rewriteObservableFunctionBody(func, pkg, false, true, false,
-                        StringUtils.EMPTY, func.name.value);
-            } else if ((func.flags & Flags.WORKER) == Flags.WORKER) {   // Identifying lambdas generated for workers
-                rewriteObservableFunctionBody(func, pkg, false, false, true,
-                        StringUtils.EMPTY, func.workerName.value);
-            }
+//            if (ENTRY_POINT_MAIN_METHOD_NAME.equals(func.name.value)) {
+//                rewriteObservableFunctionBody(func, pkg, false, true, false,
+//                        StringUtils.EMPTY, func.name.value);
+//            } else if ((func.flags & Flags.WORKER) == Flags.WORKER) {   // Identifying lambdas generated for workers
+//                rewriteObservableFunctionBody(func, pkg, false, false, true,
+//                        StringUtils.EMPTY, func.workerName.value);
+//            }
         }
         for (BIRTypeDefinition typeDef : pkg.typeDefs) {
             if ((typeDef.flags & Flags.ABSTRACT) == Flags.ABSTRACT) {
@@ -139,10 +139,10 @@ class JvmObservabilityGen {
                 BIRFunction func = typeDef.attachedFuncs.get(i);
                 rewriteAsyncInvocations(func, pkg);
                 rewriteObservableFunctionInvocations(func, pkg);
-                if (isService && (func.flags & Flags.RESOURCE) == Flags.RESOURCE) {
-                    rewriteObservableFunctionBody(func, pkg, true, false, false,
-                            cleanUpServiceName(typeDef.name.value), func.name.value);
-                }
+//                if (isService && (func.flags & Flags.RESOURCE) == Flags.RESOURCE) {
+//                    rewriteObservableFunctionBody(func, pkg, true, false, false,
+//                            cleanUpServiceName(typeDef.name.value), func.name.value);
+//                }
             }
         }
     }
