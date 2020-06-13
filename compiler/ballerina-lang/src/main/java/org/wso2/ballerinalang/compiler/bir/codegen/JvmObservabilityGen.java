@@ -34,7 +34,7 @@ import org.wso2.ballerinalang.compiler.bir.model.BIRNode.BIRParameter;
 import org.wso2.ballerinalang.compiler.bir.model.BIRNode.BIRTypeDefinition;
 import org.wso2.ballerinalang.compiler.bir.model.BIRNode.BIRVariableDcl;
 import org.wso2.ballerinalang.compiler.bir.model.BIRNonTerminator;
-import org.wso2.ballerinalang.compiler.bir.model.BIRNonTerminator.ConstantLoad;
+//import org.wso2.ballerinalang.compiler.bir.model.BIRNonTerminator.ConstantLoad;
 import org.wso2.ballerinalang.compiler.bir.model.BIRNonTerminator.TypeCast;
 import org.wso2.ballerinalang.compiler.bir.model.BIRNonTerminator.TypeTest;
 import org.wso2.ballerinalang.compiler.bir.model.BIROperand;
@@ -67,7 +67,7 @@ import org.wso2.ballerinalang.compiler.util.diagnotic.DiagnosticPos;
 import org.wso2.ballerinalang.util.Flags;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+//import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -76,9 +76,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.objectweb.asm.Opcodes.INVOKESTATIC;
-import static org.wso2.ballerinalang.compiler.bir.codegen.JvmConstants.B_STRING_VALUE;
+//import static org.wso2.ballerinalang.compiler.bir.codegen.JvmConstants.B_STRING_VALUE;
 import static org.wso2.ballerinalang.compiler.bir.codegen.JvmConstants.ERROR_VALUE;
-import static org.wso2.ballerinalang.compiler.bir.codegen.JvmConstants.OBJECT_VALUE;
+//import static org.wso2.ballerinalang.compiler.bir.codegen.JvmConstants.OBJECT_VALUE;
 import static org.wso2.ballerinalang.compiler.bir.codegen.JvmConstants.OBSERVABLE_ANNOTATION;
 import static org.wso2.ballerinalang.compiler.bir.codegen.JvmConstants.OBSERVE_UTILS;
 import static org.wso2.ballerinalang.compiler.bir.codegen.JvmConstants.REPORT_ERROR_METHOD;
@@ -273,11 +273,11 @@ class JvmObservabilityGen {
                 injectStartResourceObservationCall(startBB, func.localVars, serviceName, resourceOrAction, pkg,
                         func.pos);
             } else {
-                BIROperand objectTypeOperand = generateConstantOperand(String.format("%s$%s$objectType",
-                        INVOCATION_INSTRUMENTATION_TYPE, startBB.id.value), symbolTable.nilType, null,
-                        func.localVars, startBB, null);
+//                BIROperand objectTypeOperand = generateConstantOperand(String.format("%s$%s$objectType",
+//                        INVOCATION_INSTRUMENTATION_TYPE, startBB.id.value), symbolTable.nilType, null,
+//                        func.localVars, startBB, null);
                 injectStartCallableObservationCall(startBB, func.localVars, null, false, isMainEntryPoint, isWorker,
-                        objectTypeOperand, resourceOrAction, pkg, func.pos, FUNC_BODY_INSTRUMENTATION_TYPE);
+                        resourceOrAction, pkg, func.pos, FUNC_BODY_INSTRUMENTATION_TYPE);
             }
 
             // Fix the Basic Blocks links
@@ -399,11 +399,11 @@ class JvmObservabilityGen {
                 BIRBasicBlock newCurrentBB = insertBasicBlock(func, newCurrentIndex);
                 swapBasicBlockTerminator(currentBB, newCurrentBB);
                 {   // Injecting the instrumentation points for invocations
-                    BIROperand objectTypeOperand;
+//                    BIROperand objectTypeOperand;
                     String action;
                     if (callIns.isVirtual) {
                         // Every virtual call instruction has self as the first argument
-                        objectTypeOperand = callIns.args.get(0);
+//                        objectTypeOperand = callIns.args.get(0);
                         if (callIns.name.value.contains(".")) {
                             String[] split = callIns.name.value.split("\\.");
                             action = split[1];
@@ -411,9 +411,9 @@ class JvmObservabilityGen {
                             action = callIns.name.value;
                         }
                     } else {
-                        objectTypeOperand = generateConstantOperand(String.format("%s$%s$objectType",
-                                INVOCATION_INSTRUMENTATION_TYPE, currentBB.id.value), symbolTable.nilType,
-                                null, func.localVars, currentBB, desugaredInsPosition);
+//                        objectTypeOperand = generateConstantOperand(String.format("%s$%s$objectType",
+//                                INVOCATION_INSTRUMENTATION_TYPE, currentBB.id.value), symbolTable.nilType,
+//                                null, func.localVars, currentBB, desugaredInsPosition);
                         action = callIns.name.value;
                     }
                     currentBB.terminator = new GOTO(desugaredInsPosition, observeStartBB);
@@ -427,7 +427,7 @@ class JvmObservabilityGen {
                         observeEndBB = insertBasicBlock(func, i + 5);
 
                         injectStartCallableObservationCall(observeStartBB, func.localVars, desugaredInsPosition,
-                                isRemote, false, false, objectTypeOperand, action, pkg,
+                                isRemote, false, false, action, pkg,
                                 originalInsPos, INVOCATION_INSTRUMENTATION_TYPE);
                         injectCheckErrorCalls(errorCheckBB, errorReportBB, observeEndBB, func.localVars,
                                 desugaredInsPosition, callIns.lhsOp, INVOCATION_INSTRUMENTATION_TYPE);
@@ -445,7 +445,7 @@ class JvmObservabilityGen {
                         observeEndBB = insertBasicBlock(func, i + 3);
 
                         injectStartCallableObservationCall(observeStartBB, func.localVars, desugaredInsPosition,
-                                isRemote, false, false, objectTypeOperand, action, pkg,
+                                isRemote, false, false, action, pkg,
                                 originalInsPos, INVOCATION_INSTRUMENTATION_TYPE);
                         injectStopObservationCall(observeEndBB, desugaredInsPosition);
 
@@ -538,27 +538,25 @@ class JvmObservabilityGen {
                                                     Collection<BIRVariableDcl> scopeVarList, String serviceName,
                                                     String resource, BIRPackage pkg,
                                                     DiagnosticPos originalInsPosition) {
-        String pkgId = generatePackageId(pkg);
-        String position = generatePositionId(originalInsPosition);
-
-        String type = FUNC_BODY_INSTRUMENTATION_TYPE;
-        BIROperand serviceNameOperand = generateConstantOperand(String.format("%s$%s$service", type,
-                observeStartBB.id.value), symbolTable.stringType, serviceName, scopeVarList, observeStartBB, null);
-        BIROperand resourceOperand = generateConstantOperand(String.format("%s$%s$resource", type,
-                observeStartBB.id.value), symbolTable.stringType, resource, scopeVarList, observeStartBB, null);
-        BIROperand pkgOperand = generateConstantOperand(String.format("%s$%s$pkgId", type,
-                observeStartBB.id.value), symbolTable.stringType, pkgId, scopeVarList, observeStartBB, null);
-        BIROperand originalInsPosOperand = generateConstantOperand(String.format("%s$%s$position", type,
-                observeStartBB.id.value), symbolTable.stringType, position, scopeVarList, observeStartBB, null);
+//        String pkgId = generatePackageId(pkg);
+//        String position = generatePositionId(originalInsPosition);
+//
+//        String type = FUNC_BODY_INSTRUMENTATION_TYPE;
+//        BIROperand serviceNameOperand = generateConstantOperand(String.format("%s$%s$service", type,
+//                observeStartBB.id.value), symbolTable.stringType, serviceName, scopeVarList, observeStartBB, null);
+//        BIROperand resourceOperand = generateConstantOperand(String.format("%s$%s$resource", type,
+//                observeStartBB.id.value), symbolTable.stringType, resource, scopeVarList, observeStartBB, null);
+//        BIROperand pkgOperand = generateConstantOperand(String.format("%s$%s$pkgId", type,
+//                observeStartBB.id.value), symbolTable.stringType, pkgId, scopeVarList, observeStartBB, null);
+//        BIROperand originalInsPosOperand = generateConstantOperand(String.format("%s$%s$position", type,
+//                observeStartBB.id.value), symbolTable.stringType, position, scopeVarList, observeStartBB, null);
 
         JIMethodCall observeStartCallTerminator = new JIMethodCall(null);
         observeStartCallTerminator.invocationType = INVOKESTATIC;
         observeStartCallTerminator.jClassName = OBSERVE_UTILS;
-        observeStartCallTerminator.jMethodVMSig = String.format("(L%s;L%s;L%s;L%s;)V", B_STRING_VALUE, B_STRING_VALUE,
-                B_STRING_VALUE, B_STRING_VALUE);
+        observeStartCallTerminator.jMethodVMSig = "()V";
         observeStartCallTerminator.name = START_RESOURCE_OBSERVATION_METHOD;
-        observeStartCallTerminator.args = Arrays.asList(serviceNameOperand, resourceOperand, pkgOperand,
-                originalInsPosOperand);
+        observeStartCallTerminator.args = Collections.emptyList();
         observeStartBB.terminator = observeStartCallTerminator;
     }
 
@@ -581,38 +579,36 @@ class JvmObservabilityGen {
                                                     Collection<BIRVariableDcl> scopeVarList,
                                                     DiagnosticPos desugaredInsPos, boolean isRemote,
                                                     boolean isMainEntryPoint, boolean isWorker,
-                                                    BIROperand objectOperand, String action, BIRPackage pkg,
+                                                    String action, BIRPackage pkg,
                                                     DiagnosticPos originalInsPosition, String uniqueId) {
-        String pkgId = generatePackageId(pkg);
-        String position = generatePositionId(originalInsPosition);
-
-        BIROperand isRemoteOperand = generateConstantOperand(String.format("%s$%s$isRemote", uniqueId,
-                observeStartBB.id.value), symbolTable.booleanType, isRemote, scopeVarList, observeStartBB,
-                desugaredInsPos);
-        BIROperand isMainEntryPointOperand = generateConstantOperand(String.format("%s$%s$isMainEntryPoint", uniqueId,
-                observeStartBB.id.value), symbolTable.booleanType, isMainEntryPoint, scopeVarList, observeStartBB,
-                desugaredInsPos);
-        BIROperand isWorkerOperand = generateConstantOperand(String.format("%s$%s$isWorker", uniqueId,
-                observeStartBB.id.value), symbolTable.booleanType, isWorker, scopeVarList, observeStartBB,
-                desugaredInsPos);
-        BIROperand pkgOperand = generateConstantOperand(String.format("%s$%s$pkgId", uniqueId,
-                observeStartBB.id.value), symbolTable.stringType, pkgId, scopeVarList, observeStartBB,
-                desugaredInsPos);
-        BIROperand originalInsPosOperand = generateConstantOperand(String.format("%s$%s$position", uniqueId,
-                observeStartBB.id.value), symbolTable.stringType, position, scopeVarList, observeStartBB,
-                desugaredInsPos);
-        BIROperand actionOperand = generateConstantOperand(String.format("%s$%s$action", uniqueId,
-                observeStartBB.id.value), symbolTable.stringType, action, scopeVarList, observeStartBB,
-                desugaredInsPos);
+//        String pkgId = generatePackageId(pkg);
+//        String position = generatePositionId(originalInsPosition);
+//
+//        BIROperand isRemoteOperand = generateConstantOperand(String.format("%s$%s$isRemote", uniqueId,
+//                observeStartBB.id.value), symbolTable.booleanType, isRemote, scopeVarList, observeStartBB,
+//                desugaredInsPos);
+//        BIROperand isMainEntryPointOperand = generateConstantOperand(String.format("%s$%s$isMainEntryPoint", uniqueId,
+//                observeStartBB.id.value), symbolTable.booleanType, isMainEntryPoint, scopeVarList, observeStartBB,
+//                desugaredInsPos);
+//        BIROperand isWorkerOperand = generateConstantOperand(String.format("%s$%s$isWorker", uniqueId,
+//                observeStartBB.id.value), symbolTable.booleanType, isWorker, scopeVarList, observeStartBB,
+//                desugaredInsPos);
+//        BIROperand pkgOperand = generateConstantOperand(String.format("%s$%s$pkgId", uniqueId,
+//                observeStartBB.id.value), symbolTable.stringType, pkgId, scopeVarList, observeStartBB,
+//                desugaredInsPos);
+//        BIROperand originalInsPosOperand = generateConstantOperand(String.format("%s$%s$position", uniqueId,
+//                observeStartBB.id.value), symbolTable.stringType, position, scopeVarList, observeStartBB,
+//                desugaredInsPos);
+//        BIROperand actionOperand = generateConstantOperand(String.format("%s$%s$action", uniqueId,
+//                observeStartBB.id.value), symbolTable.stringType, action, scopeVarList, observeStartBB,
+//                desugaredInsPos);
 
         JIMethodCall observeStartCallTerminator = new JIMethodCall(desugaredInsPos);
         observeStartCallTerminator.invocationType = INVOKESTATIC;
         observeStartCallTerminator.jClassName = OBSERVE_UTILS;
-        observeStartCallTerminator.jMethodVMSig = String.format("(ZZZL%s;L%s;L%s;L%s;)V", OBJECT_VALUE, B_STRING_VALUE,
-                B_STRING_VALUE, B_STRING_VALUE);
+        observeStartCallTerminator.jMethodVMSig = "()V";
         observeStartCallTerminator.name = START_CALLABLE_OBSERVATION_METHOD;
-        observeStartCallTerminator.args = Arrays.asList(isRemoteOperand, isMainEntryPointOperand, isWorkerOperand,
-                objectOperand, actionOperand, pkgOperand, originalInsPosOperand);
+        observeStartCallTerminator.args = Collections.emptyList();
         observeStartBB.terminator = observeStartCallTerminator;
     }
 
@@ -685,28 +681,28 @@ class JvmObservabilityGen {
         observeEndBB.terminator = observeEndCallTerminator;
     }
 
-    /**
-     * Generate a constant operand from a value.
-     *
-     * @param uniqueId A unique ID to identify this constant value
-     * @param constantType The type of the constant
-     * @param constantValue The constant value which should end up being passed in the operand
-     * @param scopeVarList The variables list in the scope
-     * @param basicBlock The basic block to which additional instructions should be added
-     * @param pos The position of all instructions, variables declarations, terminators, etc.
-     * @return The generated operand which will pass the constant
-     */
-    private BIROperand generateConstantOperand(String uniqueId, BType constantType, Object constantValue,
-                                               Collection<BIRVariableDcl> scopeVarList, BIRBasicBlock basicBlock,
-                                               DiagnosticPos pos) {
-        BIRVariableDcl constLoadVariableDcl = new BIRVariableDcl(constantType,
-                new Name(String.format("$%s$const", uniqueId)), VarScope.FUNCTION, VarKind.TEMP);
-        scopeVarList.add(constLoadVariableDcl);
-        BIROperand operand = new BIROperand(constLoadVariableDcl);
-        ConstantLoad constLoadIns = new ConstantLoad(pos, constantValue, constantType, operand);
-        basicBlock.instructions.add(constLoadIns);
-        return operand;
-    }
+//    /**
+//     * Generate a constant operand from a value.
+//     *
+//     * @param uniqueId A unique ID to identify this constant value
+//     * @param constantType The type of the constant
+//     * @param constantValue The constant value which should end up being passed in the operand
+//     * @param scopeVarList The variables list in the scope
+//     * @param basicBlock The basic block to which additional instructions should be added
+//     * @param pos The position of all instructions, variables declarations, terminators, etc.
+//     * @return The generated operand which will pass the constant
+//     */
+//    private BIROperand generateConstantOperand(String uniqueId, BType constantType, Object constantValue,
+//                                               Collection<BIRVariableDcl> scopeVarList, BIRBasicBlock basicBlock,
+//                                               DiagnosticPos pos) {
+//        BIRVariableDcl constLoadVariableDcl = new BIRVariableDcl(constantType,
+//                new Name(String.format("$%s$const", uniqueId)), VarScope.FUNCTION, VarKind.TEMP);
+//        scopeVarList.add(constLoadVariableDcl);
+//        BIROperand operand = new BIROperand(constLoadVariableDcl);
+//        ConstantLoad constLoadIns = new ConstantLoad(pos, constantValue, constantType, operand);
+//        basicBlock.instructions.add(constLoadIns);
+//        return operand;
+//    }
 
     /**
      * Create and insert a new basic block into a function in the specified index.

@@ -88,40 +88,39 @@ public class ObserveUtils {
     /**
      * Start observation of a resource invocation.
      *
-     * @param serviceName name of the service to which the observer context belongs
-     * @param resourceName name of the resource being invoked
-     * @param pkg The package the resource belongs to
-     * @param position The source code position the resource in defined in
+//     * @param serviceName name of the service to which the observer context belongs
+//     * @param resourceName name of the resource being invoked
+//     * @param pkg The package the resource belongs to
+//     * @param position The source code position the resource in defined in
      */
-    public static void startResourceObservation(BString serviceName, BString resourceName, BString pkg,
-                                                BString position) {
+    public static void startResourceObservation() {
         if (!enabled) {
             return;
         }
 
-        ObserverContext observerContext;
-        Strand strand = Scheduler.getStrand();
-        if (strand.observerContext != null) {
-            observerContext = strand.observerContext;
-        } else {
-            observerContext = new ObserverContext();
-            setObserverContextToCurrentFrame(strand, observerContext);
-        }
-        String service = serviceName.getValue() == null ? UNKNOWN_SERVICE : serviceName.getValue();
-        observerContext.setServiceName(service);
-        observerContext.setResourceName(resourceName.getValue());
-        observerContext.setServer();
-
-        observerContext.addMainTag(TAG_KEY_MODULE, pkg.getValue());
-        observerContext.addMainTag(TAG_KEY_INVOCATION_POSITION, position.getValue());
-        observerContext.addMainTag(TAG_KEY_IS_RESOURCE_ENTRY_POINT, TAG_TRUE_VALUE);
-        observerContext.addMainTag(TAG_KEY_SERVICE, observerContext.getServiceName());
-        observerContext.addMainTag(TAG_KEY_RESOURCE, observerContext.getResourceName());
-        observerContext.addMainTag(TAG_KEY_CONNECTOR_NAME, observerContext.getObjectName());
-
-        observerContext.setStarted();
-        observers.forEach(observer -> observer.startServerObservation(strand.observerContext));
-        strand.setProperty(ObservabilityConstants.SERVICE_NAME, service);
+//        ObserverContext observerContext;
+//        Strand strand = Scheduler.getStrand();
+//        if (strand.observerContext != null) {
+//            observerContext = strand.observerContext;
+//        } else {
+//            observerContext = new ObserverContext();
+//            setObserverContextToCurrentFrame(strand, observerContext);
+//        }
+//        String service = serviceName.getValue() == null ? UNKNOWN_SERVICE : serviceName.getValue();
+//        observerContext.setServiceName(service);
+//        observerContext.setResourceName(resourceName.getValue());
+//        observerContext.setServer();
+//
+//        observerContext.addMainTag(TAG_KEY_MODULE, pkg.getValue());
+//        observerContext.addMainTag(TAG_KEY_INVOCATION_POSITION, position.getValue());
+//        observerContext.addMainTag(TAG_KEY_IS_RESOURCE_ENTRY_POINT, TAG_TRUE_VALUE);
+//        observerContext.addMainTag(TAG_KEY_SERVICE, observerContext.getServiceName());
+//        observerContext.addMainTag(TAG_KEY_RESOURCE, observerContext.getResourceName());
+//        observerContext.addMainTag(TAG_KEY_CONNECTOR_NAME, observerContext.getObjectName());
+//
+//        observerContext.setStarted();
+//        observers.forEach(observer -> observer.startServerObservation(strand.observerContext));
+//        strand.setProperty(ObservabilityConstants.SERVICE_NAME, service);
     }
 
     /**
@@ -174,66 +173,64 @@ public class ObserveUtils {
     /**
      * Start observability for the synchronous function/action invocations.
      *
-     * @param isRemote True if this was a remove function invocation
-     * @param isMainEntryPoint True if this was a main entry point invocation
-     * @param isWorker True if this was a worker start
-     * @param typeDef The type definition the function was attached to
-     * @param functionName name of the function being invoked
-     * @param pkg The package the resource belongs to
-     * @param position The source code position the resource in defined in
+//     * @param isRemote True if this was a remove function invocation
+//     * @param isMainEntryPoint True if this was a main entry point invocation
+//     * @param isWorker True if this was a worker start
+//     * @param typeDef The type definition the function was attached to
+//     * @param functionName name of the function being invoked
+//     * @param pkg The package the resource belongs to
+//     * @param position The source code position the resource in defined in
      */
-    public static void startCallableObservation(boolean isRemote, boolean isMainEntryPoint, boolean isWorker,
-                                                ObjectValue typeDef, BString functionName, BString pkg,
-                                                BString position) {
+    public static void startCallableObservation() {
         if (!enabled) {
             return;
         }
-        Strand strand = Scheduler.getStrand();
-        ObserverContext observerCtx = strand.observerContext;
-
-        ObserverContext newObContext = new ObserverContext();
-        newObContext.setParent(observerCtx);
-        newObContext.setServiceName(observerCtx == null ? UNKNOWN_SERVICE : observerCtx.getServiceName());
-        newObContext.setResourceName(observerCtx == null ? UNKNOWN_RESOURCE : observerCtx.getResourceName());
-        if (typeDef == null) {
-            newObContext.setObjectName(StringUtils.EMPTY);
-        } else {
-            String className = typeDef.getClass().getCanonicalName();
-            String[] classNameSplit = className.split("\\.");
-            int lastIndexOfDollar = classNameSplit[3].lastIndexOf('$');
-            newObContext.setObjectName(classNameSplit[0] + "/" + classNameSplit[1] + "/"
-                    + classNameSplit[3].substring(lastIndexOfDollar + 1));
-        }
-        newObContext.setFunctionName(functionName.getValue());
-
-        newObContext.addMainTag(TAG_KEY_MODULE, pkg.getValue());
-        newObContext.addMainTag(TAG_KEY_INVOCATION_POSITION, position.getValue());
-        if (isRemote) {
-            newObContext.addMainTag(TAG_KEY_IS_REMOTE, TAG_TRUE_VALUE);
-            newObContext.addMainTag(TAG_KEY_ACTION, newObContext.getFunctionName());
-            newObContext.addMainTag(TAG_KEY_CONNECTOR_NAME, newObContext.getObjectName());
-        }
-        if (isMainEntryPoint) {
-            newObContext.addMainTag(TAG_KEY_IS_MAIN_ENTRY_POINT, TAG_TRUE_VALUE);
-        }
-        if (isWorker) {
-            newObContext.addMainTag(TAG_KEY_IS_WORKER, TAG_TRUE_VALUE);
-        }
-        if (!isRemote && !isWorker) {
-            newObContext.addMainTag(TAG_KEY_FUNCTION, newObContext.getFunctionName());
-            if (!StringUtils.isEmpty(newObContext.getObjectName())) {
-                newObContext.addMainTag(TAG_KEY_OBJECT_NAME, newObContext.getObjectName());
-            }
-        }
-        if (!UNKNOWN_SERVICE.equals(newObContext.getServiceName())) {
-            // If service is present, resource should be too
-            newObContext.addMainTag(TAG_KEY_SERVICE, newObContext.getServiceName());
-            newObContext.addMainTag(TAG_KEY_RESOURCE, newObContext.getResourceName());
-        }
-
-        newObContext.setStarted();
-        setObserverContextToCurrentFrame(strand, newObContext);
-        observers.forEach(observer -> observer.startClientObservation(newObContext));
+//        Strand strand = Scheduler.getStrand();
+//        ObserverContext observerCtx = strand.observerContext;
+//
+//        ObserverContext newObContext = new ObserverContext();
+//        newObContext.setParent(observerCtx);
+//        newObContext.setServiceName(observerCtx == null ? UNKNOWN_SERVICE : observerCtx.getServiceName());
+//        newObContext.setResourceName(observerCtx == null ? UNKNOWN_RESOURCE : observerCtx.getResourceName());
+//        if (typeDef == null) {
+//            newObContext.setObjectName(StringUtils.EMPTY);
+//        } else {
+//            String className = typeDef.getClass().getCanonicalName();
+//            String[] classNameSplit = className.split("\\.");
+//            int lastIndexOfDollar = classNameSplit[3].lastIndexOf('$');
+//            newObContext.setObjectName(classNameSplit[0] + "/" + classNameSplit[1] + "/"
+//                    + classNameSplit[3].substring(lastIndexOfDollar + 1));
+//        }
+//        newObContext.setFunctionName(functionName.getValue());
+//
+//        newObContext.addMainTag(TAG_KEY_MODULE, pkg.getValue());
+//        newObContext.addMainTag(TAG_KEY_INVOCATION_POSITION, position.getValue());
+//        if (isRemote) {
+//            newObContext.addMainTag(TAG_KEY_IS_REMOTE, TAG_TRUE_VALUE);
+//            newObContext.addMainTag(TAG_KEY_ACTION, newObContext.getFunctionName());
+//            newObContext.addMainTag(TAG_KEY_CONNECTOR_NAME, newObContext.getObjectName());
+//        }
+//        if (isMainEntryPoint) {
+//            newObContext.addMainTag(TAG_KEY_IS_MAIN_ENTRY_POINT, TAG_TRUE_VALUE);
+//        }
+//        if (isWorker) {
+//            newObContext.addMainTag(TAG_KEY_IS_WORKER, TAG_TRUE_VALUE);
+//        }
+//        if (!isRemote && !isWorker) {
+//            newObContext.addMainTag(TAG_KEY_FUNCTION, newObContext.getFunctionName());
+//            if (!StringUtils.isEmpty(newObContext.getObjectName())) {
+//                newObContext.addMainTag(TAG_KEY_OBJECT_NAME, newObContext.getObjectName());
+//            }
+//        }
+//        if (!UNKNOWN_SERVICE.equals(newObContext.getServiceName())) {
+//            // If service is present, resource should be too
+//            newObContext.addMainTag(TAG_KEY_SERVICE, newObContext.getServiceName());
+//            newObContext.addMainTag(TAG_KEY_RESOURCE, newObContext.getResourceName());
+//        }
+//
+//        newObContext.setStarted();
+//        setObserverContextToCurrentFrame(strand, newObContext);
+//        observers.forEach(observer -> observer.startClientObservation(newObContext));
     }
 
     /**
