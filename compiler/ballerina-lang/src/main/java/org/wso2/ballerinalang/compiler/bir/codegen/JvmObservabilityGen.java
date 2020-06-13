@@ -120,7 +120,7 @@ class JvmObservabilityGen {
     public void rewriteObservableFunctions(BIRPackage pkg) {
         for (int i = 0; i < pkg.functions.size(); i++) {
             BIRFunction func = pkg.functions.get(i);
-            rewriteAsyncInvocations(func, pkg);
+//            rewriteAsyncInvocations(func, pkg);
             rewriteObservableFunctionInvocations(func, pkg);
             if (ENTRY_POINT_MAIN_METHOD_NAME.equals(func.name.value)) {
                 rewriteObservableFunctionBody(func, pkg, false, true, false,
@@ -137,7 +137,7 @@ class JvmObservabilityGen {
             boolean isService = typeDef.type instanceof BServiceType;
             for (int i = 0; i < typeDef.attachedFuncs.size(); i++) {
                 BIRFunction func = typeDef.attachedFuncs.get(i);
-                rewriteAsyncInvocations(func, pkg);
+//                rewriteAsyncInvocations(func, pkg);
                 rewriteObservableFunctionInvocations(func, pkg);
                 if (isService && (func.flags & Flags.RESOURCE) == Flags.RESOURCE) {
                     rewriteObservableFunctionBody(func, pkg, true, false, false,
