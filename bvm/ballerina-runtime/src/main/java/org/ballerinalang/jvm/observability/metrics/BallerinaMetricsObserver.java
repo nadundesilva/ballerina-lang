@@ -22,7 +22,10 @@ import org.ballerinalang.jvm.observability.ObserverContext;
 
 import java.io.PrintStream;
 import java.time.Duration;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  * Observe the runtime and collect measurements.
@@ -49,6 +52,8 @@ public class BallerinaMetricsObserver implements BallerinaObserver {
                     .percentiles(StatisticConfig.DEFAULT.getPercentiles())
                     .build()
     };
+
+    private static final Map<MetricId, LongAdder> inProgressRequestCounts = new ConcurrentHashMap<>();
 
     @Override
     public void startServerObservation(ObserverContext observerContext) {
@@ -82,7 +87,7 @@ public class BallerinaMetricsObserver implements BallerinaObserver {
         observerContext.addProperty(PROPERTY_START_TIME, System.nanoTime());
         Set<Tag> mainTags = observerContext.getMainTags();
         try {
-            getInprogressGauge(mainTags).increment();
+            getInProgressCountState(mainTags).add(1);
         } catch (RuntimeException e) {
             handleError("inprogress_requests", mainTags, e);
         }
@@ -94,7 +99,7 @@ public class BallerinaMetricsObserver implements BallerinaObserver {
         try {
             Long startTime = (Long) observerContext.getProperty(PROPERTY_START_TIME);
             long duration = System.nanoTime() - startTime;
-            getInprogressGauge(mainTags).decrement();
+            getInProgressCountState(mainTags).add(-1);
             metricRegistry.gauge(new MetricId("response_time_seconds", "Response time",
                     allTags), responseTimeStatisticConfigs).setValue(duration / 1E9);
             metricRegistry.counter(new MetricId("response_time_nanoseconds_total",
@@ -106,8 +111,12 @@ public class BallerinaMetricsObserver implements BallerinaObserver {
         }
     }
 
-    private Gauge getInprogressGauge(Set<Tag> tags) {
-        return metricRegistry.gauge(new MetricId("inprogress_requests", "In-progress requests", tags));
+    private LongAdder getInProgressCountState(Set<Tag> tags) {
+        MetricId metricId = new MetricId("inprogress_requests", "In-progress requests", tags);
+        LongAdder inProgressRequestsCount = inProgressRequestCounts.computeIfAbsent(metricId, k -> new LongAdder());
+        // A Polled Gauge is used here since Gauge uses a lot of locks
+        metricRegistry.polledGauge(metricId, inProgressRequestsCount, LongAdder::sum);
+        return inProgressRequestsCount;
     }
 
     private void handleError(String metricName, Set<Tag> tags, RuntimeException e) {
