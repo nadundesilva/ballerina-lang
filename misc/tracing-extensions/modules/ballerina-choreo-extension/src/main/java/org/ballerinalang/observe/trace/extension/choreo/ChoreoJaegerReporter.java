@@ -31,11 +31,12 @@ import org.ballerinalang.observe.trace.extension.choreo.logging.Logger;
 import org.ballerinalang.observe.trace.extension.choreo.model.ChoreoTraceSpan;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -49,12 +50,12 @@ public class ChoreoJaegerReporter implements Reporter, AutoCloseable {
     private static final int PUBLISH_INTERVAL_SECS = 10;
     private static final Logger LOGGER = LogFactory.getLogger();
 
-    private ScheduledExecutorService executorService;
-    private Task task;
-    private int maxQueueSize;
+    private final ScheduledExecutorService executorService;
+    private final Task task;
+    private final int maxQueueSize;
 
     public ChoreoJaegerReporter(int maxQueueSize) {
-        ChoreoClient choreoClient = null;
+        ChoreoClient choreoClient;
         try {
             choreoClient = ChoreoClientHolder.getChoreoClient(this);
         } catch (ChoreoClientException e) {
@@ -97,15 +98,15 @@ public class ChoreoJaegerReporter implements Reporter, AutoCloseable {
      * Worker which handles periodically publishing metrics to Choreo.
      */
     private static class Task implements Runnable {
-        private ChoreoClient choreoClient;
-        private List<ChoreoTraceSpan> traceSpans;
+        private final ChoreoClient choreoClient;
+        private final Deque<ChoreoTraceSpan> traceSpans;
 
         private Task(ChoreoClient choreoClient) {
             this.choreoClient = choreoClient;
-            this.traceSpans = new ArrayList<>();
+            this.traceSpans = new ConcurrentLinkedDeque<>();
         }
 
-        private synchronized void append(JaegerSpan jaegerSpan) {
+        private void append(JaegerSpan jaegerSpan) {
             Map<String, String> tags = new HashMap<>();
             for (Map.Entry<String, Object> tagEntry : jaegerSpan.getTags().entrySet()) {
                 tags.put(tagEntry.getKey(), tagEntry.getValue().toString());
@@ -126,30 +127,35 @@ public class ChoreoJaegerReporter implements Reporter, AutoCloseable {
             long duration = jaegerSpan.getDuration() / 1000;    // Jaeger stores duration in microseconds by default
             ChoreoTraceSpan traceSpan = new ChoreoTraceSpan(spanContext.getTraceId(), spanContext.getSpanId(),
                     jaegerSpan.getServiceName(), jaegerSpan.getOperationName(), timestamp, duration, tags, references);
-            traceSpans.add(traceSpan);
+            traceSpans.offerLast(traceSpan);
         }
 
         @Override
         public void run() {
-            ChoreoTraceSpan[] spansToBeSent;
-            synchronized (this) {
-                if (traceSpans.size() > 0) {
-                    spansToBeSent = traceSpans.toArray(new ChoreoTraceSpan[0]);
-                    traceSpans.clear();
-                } else {
-                    spansToBeSent = new ChoreoTraceSpan[0];
+            int currentCapacity = getSpanCount();
+            /*
+             * The current capacity of the queue is used as the size of the reported batch size as we need to make
+             * the batch bounded. If this is not done in an environment with a high trace sampling rate and a lot of
+             * traffic, the reporter may get stuck in a condition where the queue does not become empty due to
+             * new traces being added to the queue in a high rate.
+             */
+            List<ChoreoTraceSpan> spansToBeSent = new ArrayList<>(currentCapacity);
+            for (int i = 0; i < currentCapacity; i++) {
+                ChoreoTraceSpan traceSpan = traceSpans.pollFirst();
+                if (traceSpan == null) {
+                    break;
                 }
+                spansToBeSent.add(traceSpan);
             }
-            if (spansToBeSent.length > 0) {
-                if (!Objects.isNull(choreoClient)) {
-                    try {
-                        choreoClient.publishTraceSpans(spansToBeSent);
-                    } catch (Throwable t) {
-                        synchronized (this) {
-                            traceSpans.addAll(Arrays.asList(spansToBeSent));
-                        }
-                        LOGGER.error("failed to publish traces to Choreo due to " + t.getMessage());
+            if (spansToBeSent.size() > 0 && !Objects.isNull(choreoClient)) {
+                try {
+                    choreoClient.publishTraceSpans(spansToBeSent.toArray(new ChoreoTraceSpan[0]));
+                } catch (Throwable t) {
+                    for (int i = spansToBeSent.size() - 1; i >= 0; i--) {
+                        // Add at the end of the queue to preserve order
+                        traceSpans.offerFirst(spansToBeSent.get(i));
                     }
+                    LOGGER.error("failed to publish traces to Choreo due to " + t.getMessage());
                 }
             }
         }
