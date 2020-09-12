@@ -126,7 +126,7 @@ public class RollingHistogram {
 
         try {
             int iterations = 0;
-            synchronized (this) {
+//            synchronized (this) {
                 do {
                     currentHistogram().reset();
                     if (++currentBucket >= ringBuffer.length) {
@@ -147,7 +147,7 @@ public class RollingHistogram {
                 //TODO: Use accumulatedHistogram.reset(); and make accumulatedHistogram as final
                 //Refer: https://github.com/HdrHistogram/HdrHistogram/issues/143
                 accumulatedHistogramStale = true;
-            }
+//            }
         } finally {
             rotating = 0;
         }
@@ -159,7 +159,7 @@ public class RollingHistogram {
 
     public Snapshot getSnapshot() {
         rotate();
-        synchronized (this) {
+//        synchronized (this) {
             accumulateIfStale();
             PercentileValue[] percentileValues = null;
             final double[] monitoredPercentiles = statisticConfig.getPercentiles();
@@ -176,7 +176,7 @@ public class RollingHistogram {
                     accumulatedHistogram.getStdDeviation(),
                     accumulatedHistogram.getMaxValue(),
                     percentileValues);
-        }
+//        }
     }
 
     private void accumulateIfStale() {

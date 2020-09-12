@@ -68,34 +68,34 @@ public class DefaultGauge extends AbstractMetric implements Gauge {
 
     @Override
     public void increment(double amount) {
-        synchronized (this) {
+//        synchronized (this) {
             value.add(amount);
             updateHistogram(value.sum());
-        }
+//        }
     }
 
     @Override
     public void decrement(double amount) {
-        synchronized (this) {
+//        synchronized (this) {
             value.add(-amount);
             updateHistogram(value.sum());
-        }
+//        }
     }
 
     @Override
     public void setValue(double value) {
-        synchronized (this) {
+//        synchronized (this) {
             this.value.reset();
             this.value.add(value);
             updateHistogram(value);
-        }
+//        }
     }
 
     @Override
     public double getValue() {
-        synchronized (this) {
+//        synchronized (this) {
             return value.sum();
-        }
+//        }
     }
 
     @Override
