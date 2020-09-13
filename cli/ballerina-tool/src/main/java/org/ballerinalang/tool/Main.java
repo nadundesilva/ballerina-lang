@@ -52,6 +52,7 @@ public class Main {
     private static final Logger breLog = LoggerFactory.getLogger(Main.class);
 
     public static void main(String... args) {
+        System.out.println("Increased Trace Sampling rate to 100 per second");
         try {
             Optional<BLauncherCmd> optionalInvokedCmd = getInvokedCmd(args);
             optionalInvokedCmd.ifPresent(BLauncherCmd::execute);
