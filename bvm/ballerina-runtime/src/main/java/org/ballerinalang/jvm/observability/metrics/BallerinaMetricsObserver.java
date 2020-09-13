@@ -81,11 +81,11 @@ public class BallerinaMetricsObserver implements BallerinaObserver {
     private void startObservation(ObserverContext observerContext) {
         observerContext.addProperty(PROPERTY_START_TIME, System.nanoTime());
         Set<Tag> mainTags = observerContext.getMainTags();
-        try {
-            getInprogressGauge(mainTags).increment();
-        } catch (RuntimeException e) {
-            handleError("inprogress_requests", mainTags, e);
-        }
+//        try {
+//            getInprogressGauge(mainTags).increment();
+//        } catch (RuntimeException e) {
+//            handleError("inprogress_requests", mainTags, e);
+//        }
     }
 
     private void stopObservation(ObserverContext observerContext) {
@@ -94,9 +94,9 @@ public class BallerinaMetricsObserver implements BallerinaObserver {
         try {
             Long startTime = (Long) observerContext.getProperty(PROPERTY_START_TIME);
             long duration = System.nanoTime() - startTime;
-            getInprogressGauge(mainTags).decrement();
-            metricRegistry.gauge(new MetricId("response_time_seconds", "Response time",
-                    allTags), responseTimeStatisticConfigs).setValue(duration / 1E9);
+//            getInprogressGauge(mainTags).decrement();
+//            metricRegistry.gauge(new MetricId("response_time_seconds", "Response time",
+//                    allTags), responseTimeStatisticConfigs).setValue(duration / 1E9);
             metricRegistry.counter(new MetricId("response_time_nanoseconds_total",
                     "Total response response time for all requests", allTags)).increment(duration);
             metricRegistry.counter(new MetricId("requests_total",
@@ -106,9 +106,9 @@ public class BallerinaMetricsObserver implements BallerinaObserver {
         }
     }
 
-    private Gauge getInprogressGauge(Set<Tag> tags) {
-        return metricRegistry.gauge(new MetricId("inprogress_requests", "In-progress requests", tags));
-    }
+//    private Gauge getInprogressGauge(Set<Tag> tags) {
+//        return metricRegistry.gauge(new MetricId("inprogress_requests", "In-progress requests", tags));
+//    }
 
     private void handleError(String metricName, Set<Tag> tags, RuntimeException e) {
         // Metric Provider may throw exceptions if there is a mismatch in tags.
