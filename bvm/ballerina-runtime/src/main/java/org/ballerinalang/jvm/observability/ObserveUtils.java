@@ -112,12 +112,12 @@ public class ObserveUtils {
         observerContext.setResourceName(resourceName.getValue());
         observerContext.setServer();
 
-        observerContext.addMainTag(TAG_KEY_MODULE, pkg.getValue());
-        observerContext.addMainTag(TAG_KEY_INVOCATION_POSITION, position.getValue());
-        observerContext.addMainTag(TAG_KEY_IS_RESOURCE_ENTRY_POINT, TAG_TRUE_VALUE);
-        observerContext.addMainTag(TAG_KEY_SERVICE, observerContext.getServiceName());
-        observerContext.addMainTag(TAG_KEY_RESOURCE, observerContext.getResourceName());
-        observerContext.addMainTag(TAG_KEY_CONNECTOR_NAME, observerContext.getObjectName());
+//        observerContext.addMainTag(TAG_KEY_MODULE, pkg.getValue());
+//        observerContext.addMainTag(TAG_KEY_INVOCATION_POSITION, position.getValue());
+//        observerContext.addMainTag(TAG_KEY_IS_RESOURCE_ENTRY_POINT, TAG_TRUE_VALUE);
+//        observerContext.addMainTag(TAG_KEY_SERVICE, observerContext.getServiceName());
+//        observerContext.addMainTag(TAG_KEY_RESOURCE, observerContext.getResourceName());
+//        observerContext.addMainTag(TAG_KEY_CONNECTOR_NAME, observerContext.getObjectName());
 
         observerContext.setStarted();
         observers.forEach(observer -> observer.startServerObservation(strand.observerContext));
@@ -206,30 +206,30 @@ public class ObserveUtils {
         }
         newObContext.setFunctionName(functionName.getValue());
 
-        newObContext.addMainTag(TAG_KEY_MODULE, pkg.getValue());
-        newObContext.addMainTag(TAG_KEY_INVOCATION_POSITION, position.getValue());
-        if (isRemote) {
-            newObContext.addMainTag(TAG_KEY_IS_REMOTE, TAG_TRUE_VALUE);
-            newObContext.addMainTag(TAG_KEY_ACTION, newObContext.getFunctionName());
-            newObContext.addMainTag(TAG_KEY_CONNECTOR_NAME, newObContext.getObjectName());
-        }
-        if (isMainEntryPoint) {
-            newObContext.addMainTag(TAG_KEY_IS_MAIN_ENTRY_POINT, TAG_TRUE_VALUE);
-        }
-        if (isWorker) {
-            newObContext.addMainTag(TAG_KEY_IS_WORKER, TAG_TRUE_VALUE);
-        }
-        if (!isRemote && !isWorker) {
-            newObContext.addMainTag(TAG_KEY_FUNCTION, newObContext.getFunctionName());
-            if (!StringUtils.isEmpty(newObContext.getObjectName())) {
-                newObContext.addMainTag(TAG_KEY_OBJECT_NAME, newObContext.getObjectName());
-            }
-        }
-        if (!UNKNOWN_SERVICE.equals(newObContext.getServiceName())) {
-            // If service is present, resource should be too
-            newObContext.addMainTag(TAG_KEY_SERVICE, newObContext.getServiceName());
-            newObContext.addMainTag(TAG_KEY_RESOURCE, newObContext.getResourceName());
-        }
+//        newObContext.addMainTag(TAG_KEY_MODULE, pkg.getValue());
+//        newObContext.addMainTag(TAG_KEY_INVOCATION_POSITION, position.getValue());
+//        if (isRemote) {
+//            newObContext.addMainTag(TAG_KEY_IS_REMOTE, TAG_TRUE_VALUE);
+//            newObContext.addMainTag(TAG_KEY_ACTION, newObContext.getFunctionName());
+//            newObContext.addMainTag(TAG_KEY_CONNECTOR_NAME, newObContext.getObjectName());
+//        }
+//        if (isMainEntryPoint) {
+//            newObContext.addMainTag(TAG_KEY_IS_MAIN_ENTRY_POINT, TAG_TRUE_VALUE);
+//        }
+//        if (isWorker) {
+//            newObContext.addMainTag(TAG_KEY_IS_WORKER, TAG_TRUE_VALUE);
+//        }
+//        if (!isRemote && !isWorker) {
+//            newObContext.addMainTag(TAG_KEY_FUNCTION, newObContext.getFunctionName());
+//            if (!StringUtils.isEmpty(newObContext.getObjectName())) {
+//                newObContext.addMainTag(TAG_KEY_OBJECT_NAME, newObContext.getObjectName());
+//            }
+//        }
+//        if (!UNKNOWN_SERVICE.equals(newObContext.getServiceName())) {
+//            // If service is present, resource should be too
+//            newObContext.addMainTag(TAG_KEY_SERVICE, newObContext.getServiceName());
+//            newObContext.addMainTag(TAG_KEY_RESOURCE, newObContext.getResourceName());
+//        }
 
         newObContext.setStarted();
         setObserverContextToCurrentFrame(strand, newObContext);
