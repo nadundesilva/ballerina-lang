@@ -72,7 +72,7 @@ public class OpenTracerExtension implements OpenTracer {
             }
         }
         return new JaegerTracer.Builder(serviceName)
-                .withSampler(new RateLimitingSampler(2))
+                .withSampler(new RateLimitingSampler(10))
                 .withReporter(reporterInstance)
                 .build();
     }
