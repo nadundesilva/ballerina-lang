@@ -95,8 +95,8 @@ public class BallerinaMetricsObserver implements BallerinaObserver {
             Long startTime = (Long) observerContext.getProperty(PROPERTY_START_TIME);
             long duration = System.nanoTime() - startTime;
             getInprogressGauge(mainTags).decrement();
-            metricRegistry.gauge(new MetricId("response_time_seconds", "Response time",
-                    allTags), responseTimeStatisticConfigs).setValue(duration / 1E9);
+//            metricRegistry.gauge(new MetricId("response_time_seconds", "Response time",
+//                    allTags), responseTimeStatisticConfigs).setValue(duration / 1E9);
             metricRegistry.counter(new MetricId("response_time_nanoseconds_total",
                     "Total response response time for all requests", allTags)).increment(duration);
             metricRegistry.counter(new MetricId("requests_total",
