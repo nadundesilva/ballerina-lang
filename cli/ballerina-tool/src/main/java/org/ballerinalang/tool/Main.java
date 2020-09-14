@@ -52,6 +52,7 @@ public class Main {
     private static final Logger breLog = LoggerFactory.getLogger(Main.class);
 
     public static void main(String... args) {
+        System.out.println("Remove main tags and fix in progress requests metric");
         try {
             Optional<BLauncherCmd> optionalInvokedCmd = getInvokedCmd(args);
             optionalInvokedCmd.ifPresent(BLauncherCmd::execute);
